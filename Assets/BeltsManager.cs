@@ -1,13 +1,18 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 public class BeltsManager : MonoBehaviour
 {
     public GameObject ItemPrefab;
+    public Text TimeText;
 
     [HideInInspector] public List<BeltSystem> Belts = new List<BeltSystem>();
 
     private Camera mainCamera;
+    private Stopwatch stopwatch = new Stopwatch();
 
     private void Start()
     {
@@ -16,7 +21,8 @@ public class BeltsManager : MonoBehaviour
 
     private void Update()
     {
-        Bounds cameraBounds = new Bounds(mainCamera.transform.position, new Vector3(20, 10));
+        stopwatch.Restart();
+        Bounds cameraBounds = new Bounds((Vector2)mainCamera.transform.position, new Vector3(20, 10));
 
         for (int i = 0; i < Belts.Count; i++)
         {
@@ -26,17 +32,20 @@ public class BeltsManager : MonoBehaviour
 
                 float progress = items[j].Progress + Time.deltaTime;
                 if (progress > Belts[i].Points.Length - 1) progress = Belts[i].Points.Length - 1.01f;
-
+                
                 items[j] = new ItemOnBelt(items[j].Item, progress);
             }
 
-            for (int j = 0; j < Belts[i].Items.Count; j++)
+            if (cameraBounds.Intersects(Belts[i].Bounds))
             {
-                float itemProgr = Belts[i].Items[j].Progress;
-                Vector2 a = Belts[i].Points[(int) itemProgr];
-                Vector2 b = Belts[i].Points[(int) itemProgr + 1];
-                float p = itemProgr - (int) itemProgr;
-                Belts[i].Items[j].Item.transform.localPosition = Vector2.Lerp(a, b, p);
+                for (int j = 0; j < Belts[i].Items.Count; j++)
+                {
+                    float itemProgr = Belts[i].Items[j].Progress;
+                    Vector2 a = Belts[i].Points[(int) itemProgr];
+                    Vector2 b = Belts[i].Points[(int) itemProgr + 1];
+                    float p = itemProgr - (int) itemProgr;
+                    Belts[i].Items[j].Item.transform.localPosition = Vector2.Lerp(a, b, p);
+                }
             }
         }
 
@@ -44,6 +53,9 @@ public class BeltsManager : MonoBehaviour
         {
             SpawnItem(mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10)));
         }
+        
+        stopwatch.Stop();
+        TimeText.text = stopwatch.ElapsedMilliseconds + " ms / frame";
     }
 
     public void SpawnItem(Vector2 worldPosition)
@@ -70,9 +82,12 @@ public class BeltsManager : MonoBehaviour
     {
         foreach (BeltSystem beltSystem in Belts)
         {
-            Gizmos.color = new Color(1, 0, Random.value, 0.2f);
+            Gizmos.color = new Color(1, 0, .1f, 0.2f);
             Gizmos.DrawCube(transform.position + beltSystem.Bounds.center, beltSystem.Bounds.size);
         }
+        Bounds cameraBounds = new Bounds(mainCamera.transform.position, new Vector3(20, 10, 10));
+        Gizmos.color = new Color(1, 0, .5f, 0.2f);
+        Gizmos.DrawCube(transform.position + cameraBounds.center, cameraBounds.size);
     }
 }
 
