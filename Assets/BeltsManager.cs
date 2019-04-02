@@ -22,6 +22,8 @@ public class BeltsManager : MonoBehaviour
     private Camera mainCamera;
     private Stopwatch stopwatch = new Stopwatch();
 
+    private float beltsAnimationOffset = 4;
+
     private void Start()
     {
         mainCamera = Camera.main;
@@ -81,6 +83,8 @@ public class BeltsManager : MonoBehaviour
 
         stopwatch.Stop();
         TimeUpdateText.text = stopwatch.ElapsedMilliseconds + " ms / frame (Update)";
+
+        beltsAnimationOffset = ((int)(Time.time * 32) % 16 * 40f + 4f) / 640f;
     }
 
     private ItemOnBelt? PopClose(BeltSystem beltSystem, float targetProgress)
@@ -117,7 +121,9 @@ public class BeltsManager : MonoBehaviour
             for (int j = 1; j < beltSystem.Points.Length - 1; j++)
             {
                 Vector2 pos = beltSystem.Points[j];
-                Graphics.DrawTexture(new Rect((pos.x - .5f) * 100, (pos.y - .5f) * 100, 100, 100), BeltTexture);
+                int upside = beltSystem.Down ? 1 : -1;
+                Graphics.DrawTexture(new Rect((pos.x - .5f) * 100, (pos.y - .5f*upside) * 100, 100, 100*upside), BeltTexture,
+                    new Rect(beltsAnimationOffset, 404f / 480f, 32f / 640f, 32f / 480f), 0, 0, 0, 0);
             }
 
             foreach (ItemOnBelt item in beltSystem.Items)
@@ -205,6 +211,8 @@ public class BeltSystem
     public Vector2[] Points;
     public List<ItemOnBelt> Items;
     public Bounds Bounds;
+
+    public bool Down;
 
     public BeltSystem(Vector2[] points)
     {

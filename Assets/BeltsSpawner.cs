@@ -40,7 +40,7 @@ public class BeltsSpawner : MonoBehaviour
 
         points[points.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
 
-        Manager.Belts.Add(new BeltSystem(points));
+        Manager.Belts.Add(new BeltSystem(points){Down = down});
     }
 
     private void SpawnHand(int index, bool atUp)
