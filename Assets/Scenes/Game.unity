@@ -481,7 +481,7 @@ MonoBehaviour:
   HandPrefab: {fileID: 28463208029751301, guid: 1ce5ba8724f859841ab911d8377e3a9b,
     type: 3}
   CountText: {fileID: 360068312}
-  RowsCount: 100
+  RowsCount: 25000
   BeltLength: 30
 --- !u!4 &545481849
 Transform:
@@ -532,8 +532,8 @@ MonoBehaviour:
   TimeRenderText: {fileID: 38721155}
   BeltTexture: {fileID: 2800000, guid: 393b26cb961ea75468bec9a309d1377e, type: 3}
   ItemTexture: {fileID: 2800000, guid: 6b88b5ad3ad18a842855ea802c0c0b7a, type: 3}
-  BeltMat: {fileID: 2100000, guid: 4439d12f20c5b68418442403fe6ea5e6, type: 2}
-  Quad: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  HandTexture: {fileID: 2800000, guid: dc9f71715d756be4ca5cd83015e3f4a0, type: 3}
+  Hand2Texture: {fileID: 2800000, guid: 26579198f7f7f324aa1b67596108ced5, type: 3}
 --- !u!4 &912728950
 Transform:
   m_ObjectHideFlags: 0

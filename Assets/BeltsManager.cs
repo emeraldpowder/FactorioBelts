@@ -16,9 +16,8 @@ public class BeltsManager : MonoBehaviour
 
     public Texture BeltTexture;
     public Texture ItemTexture;
-
-    public Material BeltMat;
-    public Mesh Quad;
+    public Texture HandTexture;
+    public Texture Hand2Texture;
 
     private Camera mainCamera;
     private Stopwatch stopwatch = new Stopwatch();
@@ -31,7 +30,6 @@ public class BeltsManager : MonoBehaviour
     private void Update()
     {
         stopwatch.Restart();
-        Bounds cameraBounds = new Bounds((Vector2) mainCamera.transform.position, new Vector3(4, 2)*mainCamera.orthographicSize);
 
         foreach (BeltSystem beltSystem in Belts)
         {
@@ -62,12 +60,6 @@ public class BeltsManager : MonoBehaviour
                 {
                     item.Progress = progress;
                     hand.ItemOnBelt = item;
-                }
-
-                if (cameraBounds.Intersects(hand.Bounds))
-                {
-                    hand.Sprite.transform.localRotation = Quaternion.Euler(0, 0, progress * 180);
-                    //item.Item.transform.localPosition = hand.Sprite.transform.GetChild(0).position;
                 }
             }
             else
@@ -112,32 +104,58 @@ public class BeltsManager : MonoBehaviour
     {
         stopwatch.Restart();
         GL.PushMatrix();
-        GL.LoadProjectionMatrix(mainCamera.projectionMatrix);
-        GL.modelview = mainCamera.worldToCameraMatrix * Matrix4x4.Scale(Vector3.one * .01f);
+        GL.LoadProjectionMatrix(Camera.current.projectionMatrix);
+        GL.modelview = Camera.current.worldToCameraMatrix * Matrix4x4.Scale(Vector3.one * .01f);
         Graphics.DrawTexture(new Rect(0, 0, .6f, 1), BeltTexture);
-        Bounds cameraBounds = new Bounds((Vector2) mainCamera.transform.position, new Vector3(4, 2)*mainCamera.orthographicSize);
+        Bounds cameraBounds = new Bounds((Vector2) mainCamera.transform.position,
+            new Vector3(4, 2) * mainCamera.orthographicSize);
 
         foreach (BeltSystem beltSystem in Belts)
         {
-            if (cameraBounds.Intersects(beltSystem.Bounds))
-            {
-                for (int j = 1; j < beltSystem.Points.Length - 1; j++)
-                {
-                    Vector2 pos = beltSystem.Points[j];
-                    Graphics.DrawTexture(new Rect((pos.x - .5f) * 100, (pos.y - .5f) * 100, 100, 100), BeltTexture);
-                }
+            if (!cameraBounds.Intersects(beltSystem.Bounds)) continue;
 
-                foreach (ItemOnBelt item in beltSystem.Items)
-                {
-                    float itemProgr = item.Progress;
-                    Vector2 a = beltSystem.Points[(int) itemProgr];
-                    Vector2 b = beltSystem.Points[(int) itemProgr + 1];
-                    float p = itemProgr - (int) itemProgr;
-                    
-                    Vector3 pos = Vector2.Lerp(a, b, p);
-                    
-                    Graphics.DrawTexture(new Rect((pos.x - .25f) * 100, (pos.y - .25f) * 100, 50, 50), ItemTexture);
-                }
+            for (int j = 1; j < beltSystem.Points.Length - 1; j++)
+            {
+                Vector2 pos = beltSystem.Points[j];
+                Graphics.DrawTexture(new Rect((pos.x - .5f) * 100, (pos.y - .5f) * 100, 100, 100), BeltTexture);
+            }
+
+            foreach (ItemOnBelt item in beltSystem.Items)
+            {
+                float itemProgr = item.Progress;
+                Vector2 a = beltSystem.Points[(int) itemProgr];
+                Vector2 b = beltSystem.Points[(int) itemProgr + 1];
+                float p = itemProgr - (int) itemProgr;
+
+                Vector3 pos = Vector2.Lerp(a, b, p);
+
+                Graphics.DrawTexture(new Rect((pos.x - .25f) * 100, (pos.y + .25f) * 100, 50, -50), ItemTexture);
+            }
+        }
+
+        foreach (Hand hand in Hands)
+        {
+            if (!cameraBounds.Intersects(hand.Bounds)) continue;
+
+            Vector2 pos = hand.Bounds.center;
+            Graphics.DrawTexture(new Rect(pos.x * 100 - 90, pos.y * 100 + 46, 181, -92), HandTexture);
+
+            float progress = 0;
+            if (hand.ItemOnBelt.HasValue) progress = hand.ItemOnBelt.Value.Progress;
+
+            GL.PushMatrix();
+            GL.modelview = mainCamera.worldToCameraMatrix *
+                           Matrix4x4.Translate(pos) *
+                           Matrix4x4.Rotate(Quaternion.Euler(0, 0, progress * 180)) *
+                           Matrix4x4.Translate(-pos) *
+                           Matrix4x4.Scale(Vector3.one * .01f);
+            Graphics.DrawTexture(new Rect(pos.x * 100 - 90, pos.y * 100 + 46, 181, -92), Hand2Texture);
+            GL.PopMatrix();
+
+            if (hand.ItemOnBelt.HasValue)
+            {
+                pos += (Vector2) (Quaternion.Euler(0, 0, progress * 180) * (Vector2.left * .8f));
+                Graphics.DrawTexture(new Rect(pos.x * 100 - 25, pos.y * 100 + 25, 50, -50), ItemTexture);
             }
         }
 
@@ -211,7 +229,6 @@ public class Hand
     public float ToProgress;
 
     public ItemOnBelt? ItemOnBelt;
-    public GameObject Sprite;
 
     public Bounds Bounds;
 

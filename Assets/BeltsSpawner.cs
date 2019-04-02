@@ -23,7 +23,7 @@ public class BeltsSpawner : MonoBehaviour
 
         for (int i = 0; i < RowsCount - 1; i++)
         {
-            //SpawnHand(i, i % 2 == 0);
+            SpawnHand(i, i % 2 == 0);
         }
 
         CountText.text = RowsCount * BeltLength + " belts";
@@ -35,7 +35,7 @@ public class BeltsSpawner : MonoBehaviour
         points[0] = offset + new Vector2(0, down ? 0 : BeltLength);
         for (int i = 1; i < BeltLength + 1; i++)
         {
-            points[i] = offset + new Vector2(0, -.5f - (down ? i-1 : (BeltLength - i)));
+            points[i] = offset + new Vector2(0, -.5f - (down ? i - 1 : (BeltLength - i)));
         }
 
         points[points.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
@@ -46,14 +46,12 @@ public class BeltsSpawner : MonoBehaviour
     private void SpawnHand(int index, bool atUp)
     {
         var position = new Vector3(2 * index + 1, -(atUp ? 1 : BeltLength - 1));
-        GameObject go = Instantiate(HandPrefab, position, Quaternion.identity);
         Hand hand = new Hand(position);
 
-        hand.Sprite = go.transform.GetChild(0).gameObject;
         hand.From = Manager.Belts[index];
         hand.To = Manager.Belts[index + 1];
-        hand.FromProgress = BeltLength - 1;
-        hand.ToProgress = 1;
+        hand.FromProgress = BeltLength - .5f;
+        hand.ToProgress = 1.5f;
 
         Manager.Hands.Add(hand);
     }
@@ -64,10 +62,13 @@ public class BeltsSpawner : MonoBehaviour
         {
             for (int x = 0; x < RowsCount; x++)
             {
-                Manager.SpawnItem(new Vector2(x * 2, -4));
+                for (int i = 1; i < BeltLength - 1; i++)
+                {
+                    Manager.SpawnItem(new Vector2(x * 2, -i));
+                }
             }
 
-            CountText.text += "," + RowsCount + " items";
+            CountText.text += "," + RowsCount * (BeltLength - 2) + " items";
 
             firstUpdate = false;
         }
