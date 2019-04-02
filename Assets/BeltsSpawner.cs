@@ -23,25 +23,22 @@ public class BeltsSpawner : MonoBehaviour
 
         for (int i = 0; i < RowsCount - 1; i++)
         {
-            SpawnHand(i, i % 2 == 0);
+            //SpawnHand(i, i % 2 == 0);
         }
 
         CountText.text = RowsCount * BeltLength + " belts";
     }
 
-    private void SpawnBelt(Vector2 offset, bool upside)
+    private void SpawnBelt(Vector2 offset, bool down)
     {
-        for (int i = 0; i < BeltLength; i++)
+        var points = new Vector2[BeltLength + 2];
+        points[0] = offset + new Vector2(0, down ? 0 : BeltLength);
+        for (int i = 1; i < BeltLength + 1; i++)
         {
-            var belt = Instantiate(BeltSpritePrefab, offset + new Vector2(0, -.5f - i), Quaternion.identity);
-            belt.flipY = upside;
+            points[i] = offset + new Vector2(0, -.5f - (down ? i-1 : (BeltLength - i)));
         }
 
-        var points = new Vector2[BeltLength + 1];
-        for (int i = 0; i < BeltLength + 1; i++)
-        {
-            points[i] = offset + Vector2.down * (upside ? i : (BeltLength - i));
-        }
+        points[points.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
 
         Manager.Belts.Add(new BeltSystem(points));
     }
