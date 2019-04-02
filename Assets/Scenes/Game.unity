@@ -402,7 +402,7 @@ MonoBehaviour:
   HandPrefab: {fileID: 28463208029751301, guid: 1ce5ba8724f859841ab911d8377e3a9b,
     type: 3}
   CountText: {fileID: 360068312}
-  RowsCount: 100
+  RowsCount: 3000
   BeltLength: 10
 --- !u!4 &545481849
 Transform:

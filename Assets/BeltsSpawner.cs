@@ -50,7 +50,7 @@ public class BeltsSpawner : MonoBehaviour
     {
         var position = new Vector3(2 * index + 1, -(atUp ? 1 : BeltLength - 1));
         GameObject go = Instantiate(HandPrefab, position, Quaternion.identity);
-        Hand hand = new Hand();
+        Hand hand = new Hand(position);
 
         hand.Sprite = go.transform.GetChild(0).gameObject;
         hand.From = Manager.Belts[index];

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -68,9 +67,13 @@ public class BeltsManager : MonoBehaviour
                     item.Progress = progress;
                     hand.ItemOnBelt = item;
                 }
-                
-                hand.Sprite.transform.localRotation = Quaternion.Euler(0,0,progress*180);
-                item.Item.transform.localPosition = hand.Sprite.transform.GetChild(0).position; // TODO: might be slow
+
+                if (cameraBounds.Intersects(hand.Bounds))
+                {
+                    hand.Sprite.transform.localRotation = Quaternion.Euler(0, 0, progress * 180);
+                    item.Item.transform.localPosition =
+                        hand.Sprite.transform.GetChild(0).position; // TODO: might be slow
+                }
             }
             else
             {
@@ -176,6 +179,13 @@ public class Hand
 
     public ItemOnBelt? ItemOnBelt;
     public GameObject Sprite;
+
+    public Bounds Bounds;
+
+    public Hand(Vector2 worldPosition)
+    {
+        Bounds = new Bounds(worldPosition, new Vector3(2,1));
+    }
 }
 
 public struct ItemOnBelt
