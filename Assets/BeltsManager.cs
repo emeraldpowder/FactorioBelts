@@ -38,7 +38,7 @@ public class BeltsManager : MonoBehaviour
                 var items = beltSystem.Items;
 
                 float progress = items[j].Progress + Time.deltaTime;
-                if (progress > beltSystem.WayPoints.Length - 1.16f - beltSystem.StuckItems * .33f)
+                if (progress > beltSystem.WayPoints.Length - 1.176f - beltSystem.StuckItems * .33f)
                 {
                     progress = beltSystem.WayPoints.Length - 1.16f - beltSystem.StuckItems * .33f;
                     beltSystem.StuckItems++;
@@ -57,8 +57,10 @@ public class BeltsManager : MonoBehaviour
                 if (progress >= 1)
                 {
                     item.Progress = hand.ToProgress;
-                    hand.To.PushItem(item);
-                    hand.ItemOnBelt = null;
+                    if (hand.To.PushItem(item))
+                    {
+                        hand.ItemOnBelt = null;                        
+                    }
                 }
                 else
                 {
@@ -195,7 +197,7 @@ public class BeltSystem
     public List<ItemOnBelt> Items;
     public Bounds Bounds;
 
-    public int StuckItems = 0;
+    public int StuckItems;
 
     public bool Down;
 
@@ -213,7 +215,7 @@ public class BeltSystem
         Bounds.Expand(0.5f);
     }
 
-    public void PushItem(ItemOnBelt item)
+    public bool PushItem(ItemOnBelt item)
     {
         int start = 0;
         int end = Items.Count;
@@ -230,10 +232,25 @@ public class BeltSystem
             }
         }
 
+        float prevEdge = .17f;
+        if (start > 0) prevEdge = Items[start - 1].Progress + .33f;
+
+        float nextEdge;
+        if (start < Items.Count) nextEdge = Items[start].Progress - .33f;
+        else nextEdge = WayPoints.Length - .17f;
+
+        if (nextEdge - prevEdge < 0) return false; // No space to fit item
+
+        if (item.Progress < prevEdge) item.Progress = prevEdge;
+        else if (item.Progress > nextEdge) item.Progress = nextEdge; 
+
         Items.Insert(start, item);
+        
 #if UNITY_EDITOR
         Check();
 #endif
+        
+        return true;
     }
 
     private void Check()
@@ -284,7 +301,7 @@ public class BeltSystem
     {
         int indexFromEnd = Items.Count - 1 - index;
         if (indexFromEnd < StuckItems) StuckItems = indexFromEnd;
-        
+
         ItemOnBelt result = Items[index];
         Items.RemoveAt(index);
         return result;
