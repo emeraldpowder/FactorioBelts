@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 
 public class BeltsManager : MonoBehaviour
 {
-    public GameObject ItemPrefab;
     public Text TimeUpdateText;
     public Text TimeRenderText;
 
@@ -55,7 +53,7 @@ public class BeltsManager : MonoBehaviour
                 if (progress >= 1)
                 {
                     item.Progress = hand.ToProgress;
-                    hand.To.Items.Add(item);
+                    hand.To.PushItem(item);
                     hand.ItemOnBelt = null;
                 }
                 else
@@ -66,7 +64,7 @@ public class BeltsManager : MonoBehaviour
             }
             else
             {
-                var item = PopClose(hand.From, hand.FromProgress);
+                var item = hand.From.PopItem(hand.FromProgress);
                 if (item.HasValue)
                 {
                     ItemOnBelt itemValue = item.Value;
@@ -84,24 +82,7 @@ public class BeltsManager : MonoBehaviour
         stopwatch.Stop();
         TimeUpdateText.text = stopwatch.ElapsedMilliseconds + " ms / frame (Update)";
 
-        beltsAnimationOffset = ((int)(Time.time * 32) % 16 * 40f + 4f) / 640f;
-    }
-
-    private ItemOnBelt? PopClose(BeltSystem beltSystem, float targetProgress)
-    {
-        // TODO: very slow
-
-        for (int i = 0; i < beltSystem.Items.Count; i++)
-        {
-            if (Mathf.Abs(beltSystem.Items[i].Progress - targetProgress) < 0.125f)
-            {
-                ItemOnBelt result = beltSystem.Items[i];
-                beltSystem.Items.RemoveAt(i);
-                return result;
-            }
-        }
-
-        return null;
+        beltsAnimationOffset = ((int) (Time.time * 32) % 16 * 40f + 4f) / 640f;
     }
 
     private void OnRenderObject()
@@ -122,7 +103,8 @@ public class BeltsManager : MonoBehaviour
             {
                 Vector2 pos = beltSystem.Points[j];
                 int upside = beltSystem.Down ? 1 : -1;
-                Graphics.DrawTexture(new Rect((pos.x - .5f) * 100, (pos.y - .5f*upside) * 100, 100, 100*upside), BeltTexture,
+                Graphics.DrawTexture(new Rect((pos.x - .5f) * 100, (pos.y - .5f * upside) * 100, 100, 100 * upside),
+                    BeltTexture,
                     new Rect(beltsAnimationOffset, 404f / 480f, 32f / 640f, 32f / 480f), 0, 0, 0, 0);
             }
 
@@ -180,10 +162,7 @@ public class BeltsManager : MonoBehaviour
             {
                 if ((worldPosition - Belts[i].Points[j]).sqrMagnitude < .5)
                 {
-                    ItemOnBelt itemOnBelt = new ItemOnBelt(j);
-                    Debug.Log(Belts[i].Points[j]);
-
-                    Belts[i].Items.Add(itemOnBelt);
+                    Belts[i].PushItem(new ItemOnBelt(j));
                     return;
                 }
             }
@@ -225,6 +204,74 @@ public class BeltSystem
         }
 
         Bounds.Expand(0.5f);
+    }
+
+    public void PushItem(ItemOnBelt item)
+    {
+        int start = 0;
+        int end = Items.Count;
+        while (start != end)
+        {
+            int median = (start + end) / 2;
+            if (Items[median].Progress > item.Progress)
+            {
+                end = median;
+            }
+            else
+            {
+                start = median+1;
+            }
+        }
+        Items.Insert(start, item);
+        Check();
+    }
+
+    private void Check()
+    {
+        // TODO: For debug only, remove in production 
+        float prev = -100;
+        foreach (ItemOnBelt item in Items)
+        {
+            if(item.Progress < prev) Debug.LogError("UNSORTED");
+            prev = item.Progress;
+        }
+    }
+
+    public ItemOnBelt? PopItem(float targetProgress)
+    {
+        int start = 0;
+        int end = Items.Count;
+        while (start != end)
+        {
+            int median = (start + end) / 2;
+            if (Items[median].Progress > targetProgress)
+            {
+                end = median;
+            }
+            else
+            {
+                start = median+1;
+            }
+        }
+        
+        // ... |    start - 1     |        start         | ...
+        // ... | [prog < tarProg] | [prog >= targetProg] | ...
+
+        if (start > 0 && Mathf.Abs(Items[start-1].Progress - targetProgress) < 0.125f)
+        {
+            ItemOnBelt result = Items[start-1]; 
+            Items.RemoveAt(start-1);
+            return result;
+        }
+
+        if (start < Items.Count && Mathf.Abs(Items[start].Progress - targetProgress) < 0.125f)
+        {
+            ItemOnBelt result = Items[start]; 
+            Items.RemoveAt(start);
+            return result;
+        }
+
+        return null;
     }
 }
 

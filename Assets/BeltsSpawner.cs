@@ -10,12 +10,17 @@ public class BeltsSpawner : MonoBehaviour
     public Text CountText;
 
     public int RowsCount = 10;
+    public int RowsCountNotInEditor = 1000;
     public int BeltLength = 10;
 
     private bool firstUpdate = true;
 
     private void Start()
     {
+#if !UNITY_EDITOR
+        RowsCount = RowsCountNotInEditor;
+#endif
+
         for (int i = 0; i < RowsCount; i++)
         {
             SpawnBelt(Vector2.right * 2 * i, i % 2 != 0);
@@ -40,7 +45,7 @@ public class BeltsSpawner : MonoBehaviour
 
         points[points.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
 
-        Manager.Belts.Add(new BeltSystem(points){Down = down});
+        Manager.Belts.Add(new BeltSystem(points) {Down = down});
     }
 
     private void SpawnHand(int index, bool atUp)
