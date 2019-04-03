@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BeltSystem
+public class BeltSystem : ObjectWithBounds
 {
     public Vector2[] WayPoints;
     public Vector2[] SpritePositions;
     public List<ItemOnBelt> Items;
-    public Bounds Bounds;
 
     public int StuckItems;
 
@@ -119,7 +118,7 @@ public class BeltSystem
     }
 }
 
-public class Hand
+public class Hand : ObjectWithBounds
 {
     public BeltSystem From;
     public float FromProgress;
@@ -128,8 +127,6 @@ public class Hand
     public float ToProgress;
 
     public ItemOnBelt? ItemOnBelt;
-
-    public Bounds Bounds;
 
     public Hand(Vector2 worldPosition)
     {

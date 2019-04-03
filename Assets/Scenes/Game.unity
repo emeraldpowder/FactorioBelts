@@ -481,9 +481,11 @@ MonoBehaviour:
   HandPrefab: {fileID: 28463208029751301, guid: 1ce5ba8724f859841ab911d8377e3a9b,
     type: 3}
   CountText: {fileID: 360068312}
-  RowsCount: 500
-  RowsCountNotInEditor: 25000
-  BeltLength: 30
+  Rows: 50
+  Columns: 10
+  RowsNotInEditor: 2500
+  ColumnsNotInEditor: 10
+  BeltLength: 20
 --- !u!4 &545481849
 Transform:
   m_ObjectHideFlags: 0

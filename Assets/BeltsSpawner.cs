@@ -9,8 +9,11 @@ public class BeltsSpawner : MonoBehaviour
     public GameObject HandPrefab;
     public Text CountText;
 
-    public int RowsCount = 10;
-    public int RowsCountNotInEditor = 1000;
+    [FormerlySerializedAs("RowsCount")] public int Rows = 10;
+
+    public int Columns = 10;
+    public int RowsNotInEditor = 1000;
+    public int ColumnsNotInEditor = 10;
     public int BeltLength = 10;
 
     private bool firstUpdate = true;
@@ -18,20 +21,27 @@ public class BeltsSpawner : MonoBehaviour
     private void Start()
     {
 #if !UNITY_EDITOR
-        RowsCount = RowsCountNotInEditor;
+        Rows = RowsNotInEditor;
+        Columns = ColumnsNotInEditor;
 #endif
 
-        for (int i = 0; i < RowsCount; i++)
+        for (int i = 0; i < Rows; i++)
         {
-            SpawnBelt(Vector2.right * 2 * i, i % 2 != 0);
+            for (int j = 0; j < Columns; j++)
+            {
+                SpawnBelt(new Vector2(2 * i, -j * (BeltLength + 5)), i % 2 != 0);
+            }
         }
 
-        for (int i = 0; i < RowsCount - 1; i++)
+        for (int i = 0; i < Rows - 1; i++)
         {
-            SpawnHand(i, i % 2 == 0);
+            for (int j = 0; j < Columns; j++)
+            {
+                SpawnHand(j, i, i % 2 == 0);
+            }
         }
 
-        CountText.text = RowsCount * BeltLength + " belts";
+        CountText.text = Rows *Columns* BeltLength + " belts";
     }
 
     private void SpawnBelt(Vector2 offset, bool down)
@@ -50,35 +60,41 @@ public class BeltsSpawner : MonoBehaviour
 
         wayPoints[wayPoints.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
 
-        Manager.Belts.Add(new BeltSystem(wayPoints, spritePositions) {Down = down});
+        var beltSystem = new BeltSystem(wayPoints, spritePositions) {Down = down};
+        Manager.Belts.Add(beltSystem);
+        Manager.Objects.Insert(beltSystem);
     }
 
-    private void SpawnHand(int index, bool atUp)
+    private void SpawnHand(int j, int index, bool atUp)
     {
-        var position = new Vector3(2 * index + 1, -(atUp ? 1 : BeltLength - 1));
+        var position = new Vector3(2 * index + 1, -j * (BeltLength + 5) - (atUp ? 1 : BeltLength - 1));
         Hand hand = new Hand(position);
 
-        hand.From = Manager.Belts[index];
-        hand.To = Manager.Belts[index + 1];
+        hand.From = Manager.Belts[index + j * Rows];
+        hand.To = Manager.Belts[index + j * Rows + 1];
         hand.FromProgress = BeltLength - 1f;
         hand.ToProgress = 1f;
 
         Manager.Hands.Add(hand);
+        Manager.Objects.Insert(hand);
     }
 
     private void Update()
     {
         if (firstUpdate)
         {
-            for (int x = 0; x < RowsCount; x++)
+            for (int x = 0; x < Rows; x++)
             {
-                for (int i = 1; i < BeltLength - 1; i++)
+                for (int j = 0; j < Columns; j++)
                 {
-                    Manager.SpawnItem(new Vector2(x * 2, -i));
+                    for (int i = 1; i < BeltLength - 1; i++)
+                    {
+                        Manager.SpawnItem(new Vector2(x * 2, -i - j * (BeltLength + 5)));
+                    }
                 }
             }
 
-            CountText.text += "," + RowsCount * (BeltLength - 2) + " items";
+            CountText.text += "," + Rows*Columns * (BeltLength - 2) + " items";
 
             firstUpdate = false;
         }
