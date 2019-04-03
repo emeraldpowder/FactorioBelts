@@ -33,12 +33,16 @@ public class BeltsManager : MonoBehaviour
 
         foreach (BeltSystem beltSystem in Belts)
         {
-            for (int j = 0; j < beltSystem.Items.Count; j++)
+            for (int j = 0; j < beltSystem.Items.Count - beltSystem.StuckItems; j++)
             {
                 var items = beltSystem.Items;
 
                 float progress = items[j].Progress + Time.deltaTime;
-                if (progress > beltSystem.Points.Length - 1.25f) progress = beltSystem.Points.Length - 1.25f;
+                if (progress > beltSystem.WayPoints.Length - 1.16f - beltSystem.StuckItems * .33f)
+                {
+                    progress = beltSystem.WayPoints.Length - 1.16f - beltSystem.StuckItems * .33f;
+                    beltSystem.StuckItems++;
+                }
 
                 items[j] = new ItemOnBelt(progress);
             }
@@ -99,9 +103,8 @@ public class BeltsManager : MonoBehaviour
         {
             if (!cameraBounds.Intersects(beltSystem.Bounds)) continue;
 
-            for (int j = 1; j < beltSystem.Points.Length - 1; j++)
+            foreach (Vector2 pos in beltSystem.SpritePositions)
             {
-                Vector2 pos = beltSystem.Points[j];
                 int upside = beltSystem.Down ? 1 : -1;
                 Graphics.DrawTexture(new Rect((pos.x - .5f) * 100, (pos.y - .5f * upside) * 100, 100, 100 * upside),
                     BeltTexture,
@@ -111,8 +114,8 @@ public class BeltsManager : MonoBehaviour
             foreach (ItemOnBelt item in beltSystem.Items)
             {
                 float itemProgr = item.Progress;
-                Vector2 a = beltSystem.Points[(int) itemProgr];
-                Vector2 b = beltSystem.Points[(int) itemProgr + 1];
+                Vector2 a = beltSystem.WayPoints[(int) itemProgr];
+                Vector2 b = beltSystem.WayPoints[(int) itemProgr + 1];
                 float p = itemProgr - (int) itemProgr;
 
                 Vector3 pos = Vector2.Lerp(a, b, p);
@@ -158,9 +161,9 @@ public class BeltsManager : MonoBehaviour
         {
             if (!Belts[i].Bounds.Contains(worldPosition)) continue;
 
-            for (int j = 0; j < Belts[i].Points.Length; j++)
+            for (int j = 0; j < Belts[i].WayPoints.Length; j++)
             {
-                if ((worldPosition - Belts[i].Points[j]).sqrMagnitude < .5)
+                if ((worldPosition - Belts[i].WayPoints[j]).sqrMagnitude < .5)
                 {
                     Belts[i].PushItem(new ItemOnBelt(j));
                     return;
@@ -187,18 +190,22 @@ public class BeltsManager : MonoBehaviour
 
 public class BeltSystem
 {
-    public Vector2[] Points;
+    public Vector2[] WayPoints;
+    public Vector2[] SpritePositions;
     public List<ItemOnBelt> Items;
     public Bounds Bounds;
 
+    public int StuckItems = 0;
+
     public bool Down;
 
-    public BeltSystem(Vector2[] points)
+    public BeltSystem(Vector2[] wayPoints, Vector2[] spritePositions)
     {
-        Points = points;
+        WayPoints = wayPoints;
+        SpritePositions = spritePositions;
         Items = new List<ItemOnBelt>();
-        Bounds = new Bounds(points[0], Vector3.zero);
-        foreach (var point in points)
+        Bounds = new Bounds(wayPoints[0], Vector3.zero);
+        foreach (var point in wayPoints)
         {
             Bounds.Encapsulate(point);
         }
@@ -219,11 +226,14 @@ public class BeltSystem
             }
             else
             {
-                start = median+1;
+                start = median + 1;
             }
         }
+
         Items.Insert(start, item);
+#if UNITY_EDITOR
         Check();
+#endif
     }
 
     private void Check()
@@ -232,7 +242,7 @@ public class BeltSystem
         float prev = -100;
         foreach (ItemOnBelt item in Items)
         {
-            if(item.Progress < prev) Debug.LogError("UNSORTED");
+            if (item.Progress < prev) Debug.LogError("UNSORTED");
             prev = item.Progress;
         }
     }
@@ -250,28 +260,34 @@ public class BeltSystem
             }
             else
             {
-                start = median+1;
+                start = median + 1;
             }
         }
-        
+
         // ... |    start - 1     |        start         | ...
         // ... | [prog < tarProg] | [prog >= targetProg] | ...
 
-        if (start > 0 && Mathf.Abs(Items[start-1].Progress - targetProgress) < 0.125f)
+        if (start > 0 && Mathf.Abs(Items[start - 1].Progress - targetProgress) < 0.17f)
         {
-            ItemOnBelt result = Items[start-1]; 
-            Items.RemoveAt(start-1);
-            return result;
+            return PopItem(start - 1);
         }
 
-        if (start < Items.Count && Mathf.Abs(Items[start].Progress - targetProgress) < 0.125f)
+        if (start < Items.Count && Mathf.Abs(Items[start].Progress - targetProgress) < 0.17f)
         {
-            ItemOnBelt result = Items[start]; 
-            Items.RemoveAt(start);
-            return result;
+            return PopItem(start);
         }
 
         return null;
+    }
+
+    private ItemOnBelt PopItem(int index)
+    {
+        int indexFromEnd = Items.Count - 1 - index;
+        if (indexFromEnd < StuckItems) StuckItems = indexFromEnd;
+        
+        ItemOnBelt result = Items[index];
+        Items.RemoveAt(index);
+        return result;
     }
 }
 

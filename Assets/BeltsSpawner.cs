@@ -36,16 +36,21 @@ public class BeltsSpawner : MonoBehaviour
 
     private void SpawnBelt(Vector2 offset, bool down)
     {
-        var points = new Vector2[BeltLength + 2];
-        points[0] = offset + new Vector2(0, down ? 0 : BeltLength);
-        for (int i = 1; i < BeltLength + 1; i++)
+        var wayPoints = new Vector2[BeltLength + 1];
+        for (int i = 0; i < BeltLength + 1; i++)
         {
-            points[i] = offset + new Vector2(0, -.5f - (down ? i - 1 : (BeltLength - i)));
+            wayPoints[i] = offset + new Vector2(0, -(down ? i : (BeltLength - i)));
         }
 
-        points[points.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
+        var spritePositions = new Vector2[BeltLength];
+        for (int i = 0; i < BeltLength; i++)
+        {
+            spritePositions[i] = offset + new Vector2(0, -.5f - (down ? i : (BeltLength - 1 - i)));
+        }
 
-        Manager.Belts.Add(new BeltSystem(points) {Down = down});
+        wayPoints[wayPoints.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
+
+        Manager.Belts.Add(new BeltSystem(wayPoints, spritePositions) {Down = down});
     }
 
     private void SpawnHand(int index, bool atUp)
@@ -55,8 +60,8 @@ public class BeltsSpawner : MonoBehaviour
 
         hand.From = Manager.Belts[index];
         hand.To = Manager.Belts[index + 1];
-        hand.FromProgress = BeltLength - .5f;
-        hand.ToProgress = 1.5f;
+        hand.FromProgress = BeltLength - 1f;
+        hand.ToProgress = 1f;
 
         Manager.Hands.Add(hand);
     }
