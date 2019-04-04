@@ -60,7 +60,7 @@ public class BeltsSpawner : MonoBehaviour
 
         wayPoints[wayPoints.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
 
-        var beltSystem = new BeltSystem(wayPoints, spritePositions) {Down = down};
+        var beltSystem = new ObjectWithBounds(wayPoints, spritePositions) {Down = down};
         Manager.Belts.Add(beltSystem);
         Manager.Objects.Insert(beltSystem);
     }
@@ -68,7 +68,7 @@ public class BeltsSpawner : MonoBehaviour
     private void SpawnHand(int j, int index, bool atUp)
     {
         var position = new Vector3(2 * index + 1, -j * (BeltLength + 5) - (atUp ? 1 : BeltLength - 1));
-        Hand hand = new Hand(position);
+        ObjectWithBounds hand = new ObjectWithBounds(position);
 
         hand.From = Manager.Belts[index + j * Rows];
         hand.To = Manager.Belts[index + j * Rows + 1];
