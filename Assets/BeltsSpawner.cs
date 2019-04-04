@@ -89,7 +89,7 @@ public class BeltsSpawner : MonoBehaviour
                 {
                     for (int i = 1; i < BeltLength - 1; i++)
                     {
-                        //Manager.SpawnItem(new Vector2(x * 2, -i - j * (BeltLength + 5)));
+                        Manager.SpawnItem(new Vector2(x * 2, -i - j * (BeltLength + 5)));
                     }
                 }
             }

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 public class BeltsManager : MonoBehaviour
 {
@@ -24,22 +26,75 @@ public class BeltsManager : MonoBehaviour
 
     private float beltsAnimationOffset = 4;
 
+    private Barrier updatingBarrier = new Barrier(4);
+    private SemaphoreSlim startUpdating = new SemaphoreSlim(0);
+    private Thread[] updatingThreads;
+
     private void Start()
     {
         mainCamera = Camera.main;
+
+        updatingThreads = new Thread[3];
+        for (int i = 0; i < updatingThreads.Length; i++)
+        {
+            Debug.Log("creating thread "+i);
+            updatingThreads[i] = new Thread(parameter => UpdatePackThreadStarted((int) parameter, 4));
+            updatingThreads[i].Start(i + 1);
+            Debug.Log("created thread "+i);
+        }
     }
+
+    private float multithreadedDeltaTime;
 
     private void Update()
     {
         stopwatch.Restart();
 
-        foreach (BeltSystem beltSystem in Belts)
+        multithreadedDeltaTime = Time.deltaTime;
+        startUpdating.Release(3);
+        UpdatePack(0, 4);
+
+        Debug.Log(Thread.CurrentThread.ManagedThreadId + "(main) waiting on barrier");
+        updatingBarrier.SignalAndWait();
+
+        if (Input.GetMouseButtonDown(1))
         {
+            SpawnItem(mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10)));
+        }
+
+        beltsAnimationOffset = ((int) (Time.time * 32) % 16 * 40f + 4f) / 640f;
+
+        stopwatch.Stop();
+        TimeUpdateText.text = stopwatch.ElapsedMilliseconds + " ms / frame (Update)";
+    }
+
+    private void UpdatePackThreadStarted(int packIndex, int totalPacks)
+    {
+        while (true)
+        {
+            Debug.Log(Thread.CurrentThread.ManagedThreadId + " waiting on semo");
+            startUpdating.Wait();
+            UpdatePack(packIndex, totalPacks);
+            Debug.Log(Thread.CurrentThread.ManagedThreadId + " waiting on barrier");
+            updatingBarrier.SignalAndWait();
+        }
+    }
+
+    private void UpdatePack(int packIndex, int totalPacks)
+    {
+        float from = (float) packIndex / totalPacks;
+        float to = (float) (packIndex + 1) / totalPacks;
+        
+        Debug.Log(Thread.CurrentThread.ManagedThreadId + " started updating");
+
+        for (int i = (int) (Belts.Count * from); i < (int) (Belts.Count * to); i++)
+        {
+            BeltSystem beltSystem = Belts[i];
             for (int j = 0; j < beltSystem.Items.Count - beltSystem.StuckItems; j++)
             {
                 var items = beltSystem.Items;
 
-                float progress = items[j].Progress + Time.deltaTime;
+                float progress = items[j].Progress + multithreadedDeltaTime;
                 if (progress > beltSystem.WayPoints.Length - 1.176f - beltSystem.StuckItems * .33f)
                 {
                     progress = beltSystem.WayPoints.Length - 1.16f - beltSystem.StuckItems * .33f;
@@ -49,13 +104,16 @@ public class BeltsManager : MonoBehaviour
                 items[j] = new ItemOnBelt(progress);
             }
         }
+        
+        updatingBarrier.SignalAndWait();
 
-        foreach (Hand hand in Hands)
+        for (int i = (int) (Hands.Count * from); i < (int) (Hands.Count * to); i++)
         {
+            Hand hand = Hands[i];
             if (hand.ItemOnBelt.HasValue)
             {
                 var item = hand.ItemOnBelt.Value;
-                float progress = item.Progress + Time.deltaTime;
+                float progress = item.Progress + multithreadedDeltaTime;
                 if (progress >= 1)
                 {
                     item.Progress = hand.ToProgress;
@@ -81,16 +139,6 @@ public class BeltsManager : MonoBehaviour
                 }
             }
         }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            SpawnItem(mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10)));
-        }
-
-        stopwatch.Stop();
-        TimeUpdateText.text = stopwatch.ElapsedMilliseconds + " ms / frame (Update)";
-
-        beltsAnimationOffset = ((int) (Time.time * 32) % 16 * 40f + 4f) / 640f;
     }
 
     private void OnRenderObject()
@@ -104,7 +152,7 @@ public class BeltsManager : MonoBehaviour
             new Vector3(4, 2) * mainCamera.orthographicSize);
 
         RenderQuadTreePart(Objects, cameraBounds);
-        
+
         GL.PopMatrix();
         stopwatch.Stop();
         TimeRenderText.text = stopwatch.ElapsedMilliseconds + " ms / frame (Render)";
@@ -126,7 +174,7 @@ public class BeltsManager : MonoBehaviour
             foreach (ObjectWithBounds obj in tree.objects)
             {
                 if (!cameraBounds.Intersects(obj.Bounds)) continue;
-                
+
                 var beltSystem = obj as BeltSystem;
                 if (beltSystem != null)
                 {
@@ -141,10 +189,10 @@ public class BeltsManager : MonoBehaviour
 
                     foreach (ItemOnBelt item in beltSystem.Items)
                     {
-                        float itemProgr = item.Progress;
-                        Vector2 a = beltSystem.WayPoints[(int) itemProgr];
-                        Vector2 b = beltSystem.WayPoints[(int) itemProgr + 1];
-                        float p = itemProgr - (int) itemProgr;
+                        int itemProgr = (int) item.Progress;
+                        Vector2 a = beltSystem.WayPoints[itemProgr];
+                        Vector2 b = beltSystem.WayPoints[itemProgr + 1];
+                        float p = item.Progress - itemProgr;
 
                         Vector3 pos = Vector2.LerpUnclamped(a, b, p);
 
@@ -155,7 +203,7 @@ public class BeltsManager : MonoBehaviour
                 else
                 {
                     var hand = (Hand) obj;
-                    
+
                     Vector2 pos = hand.Bounds.center;
                     Graphics.DrawTexture(new Rect(pos.x * 100 - 90, pos.y * 100 + 46, 181, -92), HandTexture);
 
@@ -171,7 +219,7 @@ public class BeltsManager : MonoBehaviour
                                        Matrix4x4.Scale(Vector3.one * .01f);
                         Graphics.DrawTexture(new Rect(pos.x * 100 - 90, pos.y * 100 + 46, 181, -92), Hand2Texture);
                         GL.PopMatrix();
-                        
+
                         pos += (Vector2) (Quaternion.Euler(0, 0, progress * 180) * (Vector2.left * .8f));
                         Graphics.DrawTexture(new Rect(pos.x * 100 - 25, pos.y * 100 + 25, 50, -50), ItemTexture);
                     }

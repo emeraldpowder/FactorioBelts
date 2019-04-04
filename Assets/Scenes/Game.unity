@@ -484,8 +484,8 @@ MonoBehaviour:
   Rows: 10
   Columns: 10
   RowsNotInEditor: 5000
-  ColumnsNotInEditor: 10
-  BeltLength: 20
+  ColumnsNotInEditor: 20
+  BeltLength: 30
 --- !u!4 &545481849
 Transform:
   m_ObjectHideFlags: 0
