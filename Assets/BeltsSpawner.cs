@@ -25,9 +25,9 @@ public class BeltsSpawner : MonoBehaviour
         Columns = ColumnsNotInEditor;
 #endif
 
-        for (int i = 0; i < Rows; i++)
+        for (int j = 0; j < Columns; j++)
         {
-            for (int j = 0; j < Columns; j++)
+            for (int i = 0; i < Rows; i++)
             {
                 SpawnBelt(new Vector2(2 * i, -j * (BeltLength + 5)), i % 2 != 0);
             }
@@ -41,7 +41,7 @@ public class BeltsSpawner : MonoBehaviour
             }
         }
 
-        CountText.text = Rows *Columns* BeltLength + " belts";
+        CountText.text = Rows * Columns * BeltLength + " belts";
     }
 
     private void SpawnBelt(Vector2 offset, bool down)
@@ -60,7 +60,7 @@ public class BeltsSpawner : MonoBehaviour
 
         wayPoints[wayPoints.Length - 1] = offset + new Vector2(0, down ? -BeltLength : 0);
 
-        var beltSystem = new ObjectWithBounds(wayPoints, spritePositions) {Down = down};
+        var beltSystem = new BeltSystem(wayPoints, spritePositions) {Down = down};
         Manager.Belts.Add(beltSystem);
         Manager.Objects.Insert(beltSystem);
     }
@@ -68,7 +68,7 @@ public class BeltsSpawner : MonoBehaviour
     private void SpawnHand(int j, int index, bool atUp)
     {
         var position = new Vector3(2 * index + 1, -j * (BeltLength + 5) - (atUp ? 1 : BeltLength - 1));
-        ObjectWithBounds hand = new ObjectWithBounds(position);
+        Hand hand = new Hand(position);
 
         hand.From = Manager.Belts[index + j * Rows];
         hand.To = Manager.Belts[index + j * Rows + 1];
@@ -89,12 +89,12 @@ public class BeltsSpawner : MonoBehaviour
                 {
                     for (int i = 1; i < BeltLength - 1; i++)
                     {
-                        Manager.SpawnItem(new Vector2(x * 2, -i - j * (BeltLength + 5)));
+                        //Manager.SpawnItem(new Vector2(x * 2, -i - j * (BeltLength + 5)));
                     }
                 }
             }
 
-            CountText.text += "," + Rows*Columns * (BeltLength - 2) + " items";
+            CountText.text += "," + Rows * Columns * (BeltLength - 2) + " items";
 
             firstUpdate = false;
         }
