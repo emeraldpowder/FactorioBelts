@@ -37,10 +37,8 @@ public class BeltsManager : MonoBehaviour
         updatingThreads = new Thread[3];
         for (int i = 0; i < updatingThreads.Length; i++)
         {
-            Debug.Log("creating thread "+i);
             updatingThreads[i] = new Thread(parameter => UpdatePackThreadStarted((int) parameter, 4));
             updatingThreads[i].Start(i + 1);
-            Debug.Log("created thread "+i);
         }
     }
 
@@ -54,7 +52,6 @@ public class BeltsManager : MonoBehaviour
         startUpdating.Release(3);
         UpdatePack(0, 4);
 
-        Debug.Log(Thread.CurrentThread.ManagedThreadId + "(main) waiting on barrier");
         updatingBarrier.SignalAndWait();
 
         if (Input.GetMouseButtonDown(1))
@@ -72,10 +69,8 @@ public class BeltsManager : MonoBehaviour
     {
         while (true)
         {
-            Debug.Log(Thread.CurrentThread.ManagedThreadId + " waiting on semo");
             startUpdating.Wait();
             UpdatePack(packIndex, totalPacks);
-            Debug.Log(Thread.CurrentThread.ManagedThreadId + " waiting on barrier");
             updatingBarrier.SignalAndWait();
         }
     }
@@ -85,8 +80,6 @@ public class BeltsManager : MonoBehaviour
         float from = (float) packIndex / totalPacks;
         float to = (float) (packIndex + 1) / totalPacks;
         
-        Debug.Log(Thread.CurrentThread.ManagedThreadId + " started updating");
-
         for (int i = (int) (Belts.Count * from); i < (int) (Belts.Count * to); i++)
         {
             BeltSystem beltSystem = Belts[i];
