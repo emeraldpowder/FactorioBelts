@@ -25,6 +25,11 @@ public class BeltSystem : ObjectWithBounds
         Bounds.Expand(0.5f);
     }
 
+    public void PushItemRaw(ItemOnBelt item)
+    {
+        Items.Add(item);
+    }
+
     public bool PushItem(ItemOnBelt item)
     {
         int start = 0;
