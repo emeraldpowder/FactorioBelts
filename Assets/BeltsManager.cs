@@ -84,7 +84,7 @@ public class BeltsManager : MonoBehaviour
         for (int i = (int) (Belts.Count * from); i < (int) (Belts.Count * to); i++)
         {
             BeltSystem beltSystem = Belts[i];
-            for (int j = 0; j < beltSystem.Items.Count - beltSystem.StuckItems; j++)
+            for (int j = beltSystem.Items.Count - beltSystem.StuckItems - 1; j >= 0; j--)
             {
                 var items = beltSystem.Items;
 
