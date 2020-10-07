@@ -476,10 +476,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Manager: {fileID: 912728949}
-  BeltSpritePrefab: {fileID: 8756978109600218455, guid: 07d6f4bd64cadf14cb235204721b632e,
-    type: 3}
-  HandPrefab: {fileID: 28463208029751301, guid: 1ce5ba8724f859841ab911d8377e3a9b,
-    type: 3}
   CountText: {fileID: 360068312}
   Rows: 10
   Columns: 10

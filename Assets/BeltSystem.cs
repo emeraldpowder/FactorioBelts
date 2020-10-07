@@ -25,6 +25,11 @@ public class BeltSystem : ObjectWithBounds
         Bounds.Expand(0.5f);
     }
 
+    public void PushItemRaw(ItemOnBelt item)
+    {
+        Items.Add(item);
+    }
+
     public bool PushItem(ItemOnBelt item)
     {
         int start = 0;
@@ -52,20 +57,20 @@ public class BeltSystem : ObjectWithBounds
         if (nextEdge - prevEdge < 0) return false; // No space to fit item
 
         if (item.Progress < prevEdge) item.Progress = prevEdge;
-        else if (item.Progress > nextEdge) item.Progress = nextEdge; 
+        else if (item.Progress > nextEdge) item.Progress = nextEdge;
 
         Items.Insert(start, item);
-        
+
 #if UNITY_EDITOR
         Check();
 #endif
-        
+
         return true;
     }
 
     private void Check()
     {
-        // TODO: For debug only, remove in production 
+        // TODO: For debug only, remove in production
         float prev = -100;
         foreach (ItemOnBelt item in Items)
         {
