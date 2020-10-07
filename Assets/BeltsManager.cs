@@ -38,6 +38,7 @@ public class BeltsManager : MonoBehaviour
         for (int i = 0; i < updatingThreads.Length; i++)
         {
             updatingThreads[i] = new Thread(parameter => UpdatePackThreadStarted((int) parameter, 4));
+			updatingThreads[i].IsBackground = true;
             updatingThreads[i].Start(i + 1);
         }
     }
