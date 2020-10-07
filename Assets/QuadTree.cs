@@ -53,9 +53,9 @@ public class QuadTree
         {
             return false;
         }
-        
+
         if (objects.Remove(obj)) return true;
-        
+
         if (isDivided)
         {
             if (northEast.Remove(obj)) return true;

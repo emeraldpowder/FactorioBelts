@@ -63,7 +63,7 @@ public class BeltsSpawner : MonoBehaviour
         {
             beltSystem.PushItemRaw(new ItemOnBelt(i));
         }
-		
+
         Manager.Belts.Add(beltSystem);
         Manager.Objects.Insert(beltSystem);
     }

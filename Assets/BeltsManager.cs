@@ -38,7 +38,7 @@ public class BeltsManager : MonoBehaviour
         for (int i = 0; i < updatingThreads.Length; i++)
         {
             updatingThreads[i] = new Thread(parameter => UpdatePackThreadStarted((int) parameter, 4));
-			updatingThreads[i].IsBackground = true;
+            updatingThreads[i].IsBackground = true;
             updatingThreads[i].Start(i + 1);
         }
     }
@@ -80,7 +80,7 @@ public class BeltsManager : MonoBehaviour
     {
         float from = (float) packIndex / totalPacks;
         float to = (float) (packIndex + 1) / totalPacks;
-        
+
         for (int i = (int) (Belts.Count * from); i < (int) (Belts.Count * to); i++)
         {
             BeltSystem beltSystem = Belts[i];
@@ -98,7 +98,7 @@ public class BeltsManager : MonoBehaviour
                 items[j] = new ItemOnBelt(progress);
             }
         }
-        
+
         updatingBarrier.SignalAndWait();
 
         for (int i = (int) (Hands.Count * from); i < (int) (Hands.Count * to); i++)
